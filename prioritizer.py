@@ -9,12 +9,24 @@ TODO: add ability to remove tasks found uninteresting
 TODO: add ability to back up database, or even to version control it
 '''
 import itertools
+import sqlite3
+from sqlite3 import Error
+from os.path import expanduser, join
 
 def bite(iterable, n=2, fillvalue=None):
     "Collect data into fixed-length chunks or blocks"
     # bite('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
     return itertools.zip_longest(*args, fillvalue=fillvalue)
+
+def unzip(it):
+    def left():
+        for i in it:
+            yield i[0]
+    def right():
+        for i in it:
+            yield i[1]
+    return left(), right()
 
 # Please make this even for now
 tasks = [
@@ -31,6 +43,20 @@ tasks = [
     'develop an app',
 ]
 
+def get_tasks_from_db():
+    ''' gets list of tasks from sqlite3 database.
+        returns list of (id, task) tuples '''
+    try:
+        db_path = join(expanduser('~'),'.priorities.db')
+        connection = sqlite3.connect(db_path)
+        c = connection.cursor()
+        c.execute('SELECT id, task FROM tasks')
+        tasks = c.fetchall()
+    except Error as e:
+        print(e)
+    finally:
+        connection.close()
+    return tasks
 
 def best(tasks):
     """ tasks must be a dict of tasks and non-negative integers """
@@ -83,7 +109,7 @@ def prioritize(tasks):
             else:
                 best_task = best(tasks)
                 print ( 'Results: {}'.format(best_task))
-                print ('You should \"{}\"'.format(best_task.keys()[0]))
+                print ('You should \"{}\"'.format(list(best_task.keys())[0]))
                 exit(0)
 
     best_task = best(tasks)
@@ -91,4 +117,5 @@ def prioritize(tasks):
     print ('You should \"{}\"'.format(list(best_task.keys())[0]))
 
 if __name__ == '__main__':
+    ids, tasks = unzip(get_tasks_from_db())
     prioritize(tasks)
