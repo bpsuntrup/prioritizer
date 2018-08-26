@@ -7,6 +7,7 @@ TODO: add gui
 TODO: add api for easily adding tasks
 TODO: add ability to remove tasks found uninteresting
 TODO: add ability to back up database, or even to version control it
+TODO: Get q-tip a github account
 '''
 import itertools
 import sqlite3
